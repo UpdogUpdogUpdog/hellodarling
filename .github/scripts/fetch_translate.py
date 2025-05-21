@@ -56,7 +56,7 @@ def translate(text):
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-            "prompt": f"Please translate the following Japanese text into natural English:\n---\n{text}",
+            "prompt": f"Please translate the following Japanese text into natural English. There's an obivous blog post entry, you don't need to translate any ui element text:\n---\n{text}",
             "max_tokens": 1024,
             "temperature": 0.7,
         }
