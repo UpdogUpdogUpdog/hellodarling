@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,15 +18,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       margin-top: 2rem;
     }
     .nav-link {
       text-decoration: none;
-      color: #0366d6;
+      color: black;
+      font-size: 2rem;
     }
     .nav-link:hover {
-      text-decoration: underline;
+      text-decoration: none;
     }
     pre {
       white-space: pre-wrap;
@@ -38,29 +40,35 @@
       font-size: 0.8rem;
     }
     .footer-links a {
-      color: #0366d6;
+      color: black;
       text-decoration: none;
       margin-left: 1rem;
     }
     .footer-links a:hover {
-      text-decoration: underline;
+      text-decoration: none;
+    }
+    .toggle-original {
+      cursor: pointer;
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
   <h1>Today's Darling (Translated)</h1>
   <div id="content"><em>Loading...</em></div>
+  <div id="original" style="display:none; white-space: pre-wrap; word-break: break-word;"></div>
   <div class="date-nav">
     <a id="prev" class="nav-link" href="#">←</a>
     <span id="current-date"></span>
     <a id="next" class="nav-link" href="#">→</a>
   </div>
   <div class="footer-links">
-    <a id="original-link" href="#" target="_blank">see original post text</a>
+    <a id="toggle-original" class="toggle-original">see original post text</a>
   </div>
   <script>
     const translations = [];
     let currentIndex = 0;
+    let showingOriginal = false;
 
     async function loadTranslations() {
       const res = await fetch("https://api.github.com/repos/UpdogUpdogUpdog/hellodarling/contents/translations");
@@ -72,30 +80,41 @@
 
     async function render(index) {
       const name = translations[index];
-      const res = await fetch(`translations/${name}`);
-      const text = await res.text();
+      const [trans, orig] = await Promise.all([
+        fetch(`translations/${name}`).then(r => r.text()),
+        fetch(`originals/${name}`).then(r => r.text())
+      ]);
 
       document.getElementById("current-date").textContent = name.replace(".txt", "");
-      document.getElementById("content").innerHTML = `<pre>${text}</pre>`;
-
-      document.getElementById("original-link").href = `originals/${name}`;
+      document.getElementById("content").innerHTML = `<pre>${trans}</pre>`;
+      document.getElementById("original").innerHTML = `<pre>${orig}</pre>`;
+      document.getElementById("original").style.display = "none";
+      document.getElementById("content").style.display = "block";
+      showingOriginal = false;
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
-
-      document.getElementById("prev").onclick = () => {
-        if (index < translations.length - 1) {
-          currentIndex++;
-          render(currentIndex);
-        }
-      };
-      document.getElementById("next").onclick = () => {
-        if (index > 0) {
-          currentIndex--;
-          render(currentIndex);
-        }
-      };
     }
+
+    document.getElementById("prev").onclick = () => {
+      if (currentIndex < translations.length - 1) {
+        currentIndex++;
+        render(currentIndex);
+      }
+    };
+
+    document.getElementById("next").onclick = () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        render(currentIndex);
+      }
+    };
+
+    document.getElementById("toggle-original").onclick = () => {
+      showingOriginal = !showingOriginal;
+      document.getElementById("content").style.display = showingOriginal ? "none" : "block";
+      document.getElementById("original").style.display = showingOriginal ? "block" : "none";
+    };
 
     loadTranslations();
   </script>
