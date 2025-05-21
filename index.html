@@ -31,6 +31,20 @@
       white-space: pre-wrap;
       word-break: break-word;
     }
+    .footer-links {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .footer-links a {
+      color: #0366d6;
+      text-decoration: none;
+      margin-left: 1rem;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -40,6 +54,9 @@
     <a id="prev" class="nav-link" href="#">←</a>
     <span id="current-date"></span>
     <a id="next" class="nav-link" href="#">→</a>
+  </div>
+  <div class="footer-links">
+    <a id="original-link" href="#" target="_blank">see original post text</a>
   </div>
   <script>
     const translations = [];
@@ -60,6 +77,8 @@
 
       document.getElementById("current-date").textContent = name.replace(".txt", "");
       document.getElementById("content").innerHTML = `<pre>${text}</pre>`;
+
+      document.getElementById("original-link").href = `originals/${name}`;
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";

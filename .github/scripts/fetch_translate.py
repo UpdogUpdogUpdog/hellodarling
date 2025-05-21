@@ -72,8 +72,14 @@ def main():
 
     today = datetime.date.today().isoformat()
     os.makedirs("translations", exist_ok=True)
+    os.makedirs("originals", exist_ok=True)
+
     with open(f"translations/{today}.txt", "w", encoding="utf-8") as f:
         f.write(en_text)
+
+    with open(f"originals/{today}.txt", "w", encoding="utf-8") as f:
+        f.write(jp_text.strip())
+
 
 if __name__ == "__main__":
     try:
