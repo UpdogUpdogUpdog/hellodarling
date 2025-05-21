@@ -30,11 +30,13 @@ jobs:
           python .github/scripts/fetch_translate.py
 
       - name: Commit and push
+        env:
+          PUSH_URL: https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
-          git remote -v  # debug print
+          git remote set-url origin "$PUSH_URL"
+          git remote -v
           git add translations/
           git commit -m "Update translation for $(date +'%Y-%m-%d')" || echo "No changes"
           git push origin HEAD
