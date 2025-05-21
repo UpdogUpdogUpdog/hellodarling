@@ -22,12 +22,12 @@
       padding: 2rem;
       overflow-y: scroll;
       position: relative;
-      scrollbar-width: none;        /* Firefox */
-      -ms-overflow-style: none;     /* IE 10+ */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
 
     #main::-webkit-scrollbar {
-      display: none;                /* Chrome/Safari */
+      display: none;
     }
 
     .nav-link {
@@ -55,6 +55,7 @@
       border-top: 1px solid #ccc;
       padding: 0.5rem 2rem;
       font-size: 0.8rem;
+      z-index: 999;
     }
 
     .footer-top, .footer-bottom {
@@ -82,28 +83,35 @@
       top: 0;
       left: 0;
       right: 0;
+      opacity: 0;
+      visibility: hidden;
+      z-index: 0;
     }
 
     .visible {
-      opacity: 1;
+      opacity: 1 !important;
+      visibility: visible !important;
       z-index: 1;
       position: relative;
     }
 
     .hidden {
-      opacity: 0;
+      opacity: 0 !important;
+      visibility: hidden !important;
       z-index: 0;
       pointer-events: none;
     }
 
     .mask-reveal {
-      animation: reveal-mask 1s ease forwards;
+      animation: reveal-mask 3s ease forwards;
       -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
       mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
       -webkit-mask-size: 100% 100%;
       mask-size: 100% 100%;
       -webkit-mask-repeat: no-repeat;
       mask-repeat: no-repeat;
+      z-index: 2;
+      visibility: visible;
     }
 
     @keyframes reveal-mask {
@@ -122,7 +130,7 @@
   <div id="main">
     <h1>Today's Darling (Translated)</h1>
     <div id="content" class="fade hidden"><em>Loading...</em></div>
-    <div id="original" class="fade visible"></div>
+    <div id="original" class="fade hidden"></div>
   </div>
 
   <div class="footer">
@@ -157,24 +165,29 @@
         fetch(`originals/${name}`).then(r => r.text())
       ]);
 
-      document.getElementById("current-date").textContent = name.replace(".txt", "");
-      document.getElementById("content").innerHTML = `<pre>${trans}</pre>`;
-      document.getElementById("original").innerHTML = `<pre>${orig}</pre>`;
-
       const content = document.getElementById("content");
       const originalDiv = document.getElementById("original");
 
-      content.classList.remove("visible", "hidden");
-      originalDiv.classList.remove("visible", "hidden");
+      document.getElementById("current-date").textContent = name.replace(".txt", "");
+      content.innerHTML = `<pre>${trans}</pre>`;
+      originalDiv.innerHTML = `<pre>${orig}</pre>`;
 
-      content.classList.add("fade", "visible");
-      originalDiv.classList.add("fade", "mask-reveal");
+      content.className = "fade hidden";
+      originalDiv.className = "fade hidden";
 
-      setTimeout(() => {
-        originalDiv.classList.remove("visible", "mask-reveal");
-        originalDiv.classList.add("hidden");
-        showingOriginal = false;
-      }, 1000);
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          content.classList.add("visible");
+          originalDiv.classList.remove("hidden");
+          originalDiv.classList.add("mask-reveal");
+
+          setTimeout(() => {
+            originalDiv.classList.remove("mask-reveal");
+            originalDiv.classList.add("hidden");
+            showingOriginal = false;
+          }, 3000);
+        }, 2000);
+      });
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
