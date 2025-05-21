@@ -61,7 +61,10 @@ def translate(text):
     print("Together API raw response:", data)
 
     try:
-        return data["output"]["choices"][0]["text"].strip()
+        output = data["choices"][0]["text"].strip()
+        if output.endswith("...") or len(output) > 900:
+            print("⚠️  Output may be truncated.")
+        return output
     except (KeyError, IndexError) as e:
         raise RuntimeError("Unexpected response format: " + str(data))
 
