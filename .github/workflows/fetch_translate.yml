@@ -30,9 +30,12 @@ jobs:
           python .github/scripts/fetch_translate.py
 
       - name: Commit and push
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
           git add translations/
           git commit -m "Update translation for $(date +'%Y-%m-%d')" || echo "No changes"
           git push
