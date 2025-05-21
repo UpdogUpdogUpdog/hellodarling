@@ -49,8 +49,8 @@ def translate(text):
         "https://api.together.xyz/inference",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
-            "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-            "prompt": f"Please translate the following Japanese text into natural English. There's an obvious blog post entry, you don't need to translate any UI element text:\n---\n{text}",
+            "model": "meta-llama/Llama-3-70b-chat-hf",
+            "prompt": f"Translate the following Japanese essay into natural, literary English without adding or omitting ideas. Retain paragraph breaks and tone.\n---\n{text}",
             "max_tokens": 1024,
             "temperature": 0.7,
         }
