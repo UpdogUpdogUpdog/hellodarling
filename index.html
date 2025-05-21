@@ -1,0 +1,86 @@
+# index.html for GitHub Pages
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Today's Darling (Translated)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+    .date-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.2rem;
+      margin-top: 2rem;
+    }
+    .nav-link {
+      text-decoration: none;
+      color: #0366d6;
+    }
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>Today's Darling (Translated)</h1>
+  <div id="content"><em>Loading...</em></div>
+  <div class="date-nav">
+    <a id="prev" class="nav-link" href="#">←</a>
+    <span id="current-date"></span>
+    <a id="next" class="nav-link" href="#">→</a>
+  </div>
+  <script>
+    const translations = [];
+    let currentIndex = 0;
+
+    async function loadTranslations() {
+      const res = await fetch("https://api.github.com/repos/UpdogUpdogUpdog/hellodarling/contents/translations");
+      const files = await res.json();
+      const txts = files.filter(f => f.name.endsWith(".txt")).map(f => f.name).sort().reverse();
+      translations.push(...txts);
+      render(currentIndex);
+    }
+
+    async function render(index) {
+      const name = translations[index];
+      const res = await fetch(`translations/${name}`);
+      const text = await res.text();
+
+      document.getElementById("current-date").textContent = name.replace(".txt", "");
+      document.getElementById("content").innerHTML = `<pre>${text}</pre>`;
+
+      document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
+      document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
+
+      document.getElementById("prev").onclick = () => {
+        if (index < translations.length - 1) {
+          currentIndex++;
+          render(currentIndex);
+        }
+      };
+      document.getElementById("next").onclick = () => {
+        if (index > 0) {
+          currentIndex--;
+          render(currentIndex);
+        }
+      };
+    }
+
+    loadTranslations();
+  </script>
+</body>
+</html>
