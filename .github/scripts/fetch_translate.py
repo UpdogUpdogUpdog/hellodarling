@@ -9,14 +9,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-# Setup headless Chrome
 def init_driver():
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
-    options.binary_location = "/usr/bin/chromium-browser" 
+    options.binary_location = "/usr/bin/chromium-browser"
     return webdriver.Chrome(options=options)
 
 def fetch_today_post():
@@ -51,22 +50,33 @@ def translate(text):
     if not api_key:
         raise RuntimeError("TOGETHER_API_KEY not found in environment")
 
+    print("Sending text to translation API...")
     res = requests.post(
         "https://api.together.xyz/inference",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-            "prompt": f"Please translate the following Japanese text into natural English. There's an obivous blog post entry, you don't need to translate any ui element text:\n---\n{text}",
+            "prompt": f"Please translate the following Japanese text into natural English. There's an obvious blog post entry, you don't need to translate any UI element text:\n---\n{text}",
             "max_tokens": 1024,
             "temperature": 0.7,
         }
     )
+
     res.raise_for_status()
-    return res.json().get("output", "")
+    data = res.json()
+    print("Together API raw response:", data)
+
+    try:
+        return data["output"]["choices"][0]["text"].strip()
+    except (KeyError, IndexError) as e:
+        raise RuntimeError("Unexpected response format: " + str(data))
 
 def main():
     jp_text = fetch_today_post()
+    print("Japanese text fetched:\n", jp_text)
+
     en_text = translate(jp_text)
+    print("Translated text:\n", en_text)
 
     today = datetime.date.today().isoformat()
     os.makedirs("translations", exist_ok=True)
@@ -74,4 +84,8 @@ def main():
         f.write(en_text)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print("ERROR:", e)
+        raise
