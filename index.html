@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Today's Darling (Translated)</title>
   <style>
     body {
@@ -23,27 +23,10 @@
       overflow-y: scroll;
       position: relative;
       scrollbar-width: none;
-      -ms-overflow-style: none;
     }
 
     #main::-webkit-scrollbar {
       display: none;
-    }
-
-    .nav-link {
-      text-decoration: none;
-      color: black;
-      font-size: 2rem;
-    }
-
-    .nav-link:hover {
-      text-decoration: none;
-    }
-
-    pre {
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin: 0;
     }
 
     .footer {
@@ -74,69 +57,73 @@
     }
 
     .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .footer-bottom {
+      position: relative;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .footer-bottom span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-bottom .nav-link {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.8rem;
+      color: black;
       text-decoration: none;
     }
 
-    .fade {
-      transition: opacity 0.4s ease;
-      position: absolute;
-      top: 0;
+    .footer-bottom #prev {
       left: 0;
-      right: 0;
-      opacity: 0;
-      visibility: hidden;
-      z-index: 0;
     }
 
-    .visible {
-      opacity: 1 !important;
-      visibility: visible !important;
-      z-index: 1;
-      position: relative;
+    .footer-bottom #next {
+      right: 0;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
     }
 
     .hidden {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      z-index: 0;
-      pointer-events: none;
+      display: none;
     }
 
-    .mask-reveal {
-      animation: reveal-mask 3s ease forwards;
-      -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-      mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
-      -webkit-mask-size: 100% 100%;
-      mask-size: 100% 100%;
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      z-index: 2;
-      visibility: visible;
-    }
-
-    @keyframes reveal-mask {
-      from {
-        -webkit-mask-position: 0% 0%;
-        mask-position: 0% 0%;
-      }
-      to {
-        -webkit-mask-position: 0% 100%;
-        mask-position: 0% 100%;
-      }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
     }
   </style>
 </head>
 <body>
   <div id="main">
     <h1>Today's Darling (Translated)</h1>
-    <div id="content" class="fade hidden"><em>Loading...</em></div>
-    <div id="original" class="fade hidden"></div>
+    <div id="translated" class="fade-in"><em>Loading...</em></div>
+    <div id="original" class="hidden"></div>
   </div>
 
   <div class="footer">
     <div class="footer-top">
       <a href="https://www.1101.com/home.html" target="_blank">1101.com</a>
-      <a id="toggle-original" class="toggle-original">see original post text</a>
+      <a href="#" id="toggle-original">see original post text</a>
     </div>
     <div class="footer-bottom">
       <a id="prev" class="nav-link" href="#">←</a>
@@ -165,71 +152,57 @@
         fetch(`originals/${name}`).then(r => r.text())
       ]);
 
-      const content = document.getElementById("content");
-      const originalDiv = document.getElementById("original");
-
       document.getElementById("current-date").textContent = name.replace(".txt", "");
-      content.innerHTML = `<pre>${trans}</pre>`;
-      originalDiv.innerHTML = `<pre>${orig}</pre>`;
+      const transDiv = document.getElementById("translated");
+      const origDiv = document.getElementById("original");
 
-      content.className = "fade hidden";
-      originalDiv.className = "fade hidden";
+      transDiv.innerHTML = `<pre>${trans}</pre>`;
+      origDiv.innerHTML = `<pre>${orig}</pre>`;
 
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          content.classList.add("visible");
-          originalDiv.classList.remove("hidden");
-          originalDiv.classList.add("mask-reveal");
+      transDiv.classList.add("fade-in");
+      origDiv.classList.add("hidden");
 
-          setTimeout(() => {
-            originalDiv.classList.remove("mask-reveal");
-            originalDiv.classList.add("hidden");
-            showingOriginal = false;
-          }, 3000);
-        }, 2000);
-      });
+      setTimeout(() => {
+        transDiv.classList.add("visible");
+      }, 2000);
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
     }
 
-    function updateView() {
-      const content = document.getElementById("content");
-      const original = document.getElementById("original");
+    document.getElementById("toggle-original").onclick = (e) => {
+      e.preventDefault();
+      showingOriginal = !showingOriginal;
+
+      const transDiv = document.getElementById("translated");
+      const origDiv = document.getElementById("original");
       const toggle = document.getElementById("toggle-original");
 
       if (showingOriginal) {
-        content.classList.remove("visible");
-        content.classList.add("hidden");
-        original.classList.remove("hidden");
-        original.classList.add("visible");
+        transDiv.classList.add("hidden");
+        origDiv.classList.remove("hidden");
         toggle.textContent = "see translated text";
       } else {
-        original.classList.remove("visible");
-        original.classList.add("hidden");
-        content.classList.remove("hidden");
-        content.classList.add("visible");
+        origDiv.classList.add("hidden");
+        transDiv.classList.remove("hidden");
         toggle.textContent = "see original post text";
       }
-    }
+    };
 
-    document.getElementById("prev").onclick = () => {
+    document.getElementById("prev").onclick = (e) => {
+      e.preventDefault();
       if (currentIndex < translations.length - 1) {
         currentIndex++;
         render(currentIndex);
       }
     };
 
-    document.getElementById("next").onclick = () => {
+    document.getElementById("next").onclick = (e) => {
+      e.preventDefault();
       if (currentIndex > 0) {
         currentIndex--;
         render(currentIndex);
       }
-    };
-
-    document.getElementById("toggle-original").onclick = () => {
-      showingOriginal = !showingOriginal;
-      updateView();
     };
 
     loadTranslations();
