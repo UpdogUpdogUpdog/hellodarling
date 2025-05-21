@@ -33,17 +33,11 @@ def fetch_today_post():
     soup = BeautifulSoup(driver.page_source, "html.parser")
     driver.quit()
 
-    darling_div = soup.find("div", class_="darling-text")
-    if not darling_div:
-        candidates = soup.find_all("div")
-        for div in candidates:
-            if div.text and "今日のダーリン" in div.text:
-                darling_div = div
-                break
+    darling_div = soup.select_one("div.darling__txt")
     if not darling_div:
         raise Exception("Could not find today's darling post.")
 
-    return darling_div.get_text("\n", strip=True)
+    return darling_div.get_text("\n", strip=True).replace("\u3000", " ")
 
 def translate(text):
     api_key = os.getenv("TOGETHER_API_KEY")
