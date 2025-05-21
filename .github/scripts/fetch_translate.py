@@ -44,29 +44,24 @@ def translate(text):
     if not api_key:
         raise RuntimeError("TOGETHER_API_KEY not found in environment")
 
-    print("Sending text to translation API...")
     res = requests.post(
         "https://api.together.xyz/inference",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": "meta-llama/Llama-3-70b-chat-hf",
             "prompt": f"Translate the following Japanese essay into natural, literary English without adding or omitting ideas. Retain paragraph breaks and tone.\n---\n{text}",
-            "max_tokens": 1024,
+            "max_tokens": 2048,
             "temperature": 0.7,
         }
     )
-
     res.raise_for_status()
     data = res.json()
-    print("Together API raw response:", data)
 
     try:
-        output = data["choices"][0]["text"].strip()
-        if output.endswith("...") or len(output) > 900:
-            print("⚠️  Output may be truncated.")
-        return output
+        return data["output"]["choices"][0]["text"].strip()
     except (KeyError, IndexError) as e:
-        raise RuntimeError("Unexpected response format: " + str(data))
+        raise RuntimeError("Unexpected response format: " + str(data)) from e
+
 
 def main():
     jp_text = fetch_today_post()
