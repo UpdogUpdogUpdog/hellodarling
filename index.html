@@ -126,16 +126,19 @@
       <a href="#" id="toggle-original">see original post text</a>
     </div>
     <div class="footer-bottom">
-      <a id="prev" class="nav-link" href="#">←</a>
-      <span id="current-date"></span>
-      <a id="next" class="nav-link" href="#">→</a>
-    </div>
+  <div style="position: relative; width: 100%; display: flex; justify-content: center; align-items: center;">
+    <a id="prev" class="nav-link" href="#" style="position: absolute; left: 0;">←</a>
+    <span id="current-date" style="text-align: center;">Loading...</span>
+    <a id="next" class="nav-link" href="#" style="position: absolute; right: 0;">→</a>
+  </div>
+</div>
+</div>
   </div>
 
   <script>
     const translations = [];
     let currentIndex = 0;
-    let showingOriginal = false;
+    let showingOriginal = true;
 
     async function loadTranslations() {
       const res = await fetch("https://api.github.com/repos/UpdogUpdogUpdog/hellodarling/contents/translations");
@@ -146,7 +149,7 @@
     }
 
     async function render(index) {
-      showingOriginal = false;
+      showingOriginal = true;
 
       const name = translations[index];
       const [trans, orig] = await Promise.all([
@@ -162,17 +165,20 @@
       transDiv.innerHTML = `<pre>${trans}</pre>`;
       origDiv.innerHTML = `<pre>${orig}</pre>`;
 
-      transDiv.classList.remove("hidden");
+      transDiv.classList.add("hidden");
+      transDiv.classList.remove("fade-in", "visible");
+
       origDiv.classList.add("hidden");
-      transDiv.classList.remove("visible");
-      void transDiv.offsetWidth; // force reflow
-      transDiv.classList.add("fade-in");
+      origDiv.classList.remove("fade-in", "visible");
+      void origDiv.offsetWidth;
+      origDiv.classList.add("fade-in");
+      origDiv.classList.remove("hidden");
 
       setTimeout(() => {
-        transDiv.classList.add("visible");
+        origDiv.classList.add("visible");
       }, 2000);
 
-      toggle.textContent = "see original post text";
+      toggle.textContent = "see translated text";
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
@@ -187,12 +193,41 @@
       const toggle = document.getElementById("toggle-original");
 
       if (showingOriginal) {
-        transDiv.classList.add("hidden");
-        origDiv.classList.remove("hidden");
+        transDiv.classList.remove("fade-in", "visible");
+        void transDiv.offsetWidth;
+        transDiv.classList.add("fade-in");
+
+        setTimeout(() => {
+          transDiv.classList.add("hidden");
+
+          origDiv.classList.add("hidden");
+          origDiv.classList.remove("fade-in", "visible");
+          void origDiv.offsetWidth;
+          origDiv.classList.add("fade-in");
+
+          // Only now unhide and fade in
+          origDiv.classList.remove("hidden");
+          setTimeout(() => origDiv.classList.add("visible"), 1000);
+        }, 1000);
+
         toggle.textContent = "see translated text";
       } else {
-        origDiv.classList.add("hidden");
-        transDiv.classList.remove("hidden");
+        origDiv.classList.remove("fade-in", "visible");
+        void origDiv.offsetWidth;
+        origDiv.classList.add("fade-in");
+
+        setTimeout(() => {
+          origDiv.classList.add("hidden");
+
+          transDiv.classList.add("hidden");
+          transDiv.classList.remove("fade-in", "visible");
+          void transDiv.offsetWidth;
+          transDiv.classList.add("fade-in");
+
+          transDiv.classList.remove("hidden");
+          setTimeout(() => transDiv.classList.add("visible"), 1000);
+        }, 1000);
+
         toggle.textContent = "see original post text";
       }
     };
@@ -200,16 +235,38 @@
     document.getElementById("prev").onclick = (e) => {
       e.preventDefault();
       if (currentIndex < translations.length - 1) {
-        currentIndex++;
-        render(currentIndex);
+        const transDiv = document.getElementById("translated");
+        const origDiv = document.getElementById("original");
+        const visibleDiv = showingOriginal ? origDiv : transDiv;
+
+        visibleDiv.classList.remove("fade-in", "visible");
+        void visibleDiv.offsetWidth;
+        visibleDiv.classList.add("fade-in");
+
+        setTimeout(() => {
+          visibleDiv.classList.add("hidden");
+          currentIndex++;
+          render(currentIndex);
+        }, 1000);
       }
     };
 
     document.getElementById("next").onclick = (e) => {
       e.preventDefault();
       if (currentIndex > 0) {
-        currentIndex--;
-        render(currentIndex);
+        const transDiv = document.getElementById("translated");
+        const origDiv = document.getElementById("original");
+        const visibleDiv = showingOriginal ? origDiv : transDiv;
+
+        visibleDiv.classList.remove("fade-in", "visible");
+        void visibleDiv.offsetWidth;
+        visibleDiv.classList.add("fade-in");
+
+        setTimeout(() => {
+          visibleDiv.classList.add("hidden");
+          currentIndex--;
+          render(currentIndex);
+        }, 1000);
       }
     };
 
