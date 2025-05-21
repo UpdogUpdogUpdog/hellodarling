@@ -146,6 +146,8 @@
     }
 
     async function render(index) {
+      showingOriginal = false;
+
       const name = translations[index];
       const [trans, orig] = await Promise.all([
         fetch(`translations/${name}`).then(r => r.text()),
@@ -155,16 +157,22 @@
       document.getElementById("current-date").textContent = name.replace(".txt", "");
       const transDiv = document.getElementById("translated");
       const origDiv = document.getElementById("original");
+      const toggle = document.getElementById("toggle-original");
 
       transDiv.innerHTML = `<pre>${trans}</pre>`;
       origDiv.innerHTML = `<pre>${orig}</pre>`;
 
-      transDiv.classList.add("fade-in");
+      transDiv.classList.remove("hidden");
       origDiv.classList.add("hidden");
+      transDiv.classList.remove("visible");
+      void transDiv.offsetWidth; // force reflow
+      transDiv.classList.add("fade-in");
 
       setTimeout(() => {
         transDiv.classList.add("visible");
       }, 2000);
+
+      toggle.textContent = "see original post text";
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
