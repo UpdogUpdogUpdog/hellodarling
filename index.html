@@ -8,29 +8,26 @@
     body {
       font-family: sans-serif;
       margin: 0;
-      padding-bottom: 3rem;
       max-width: 700px;
       margin-left: auto;
       margin-right: auto;
       line-height: 1.6;
-      position: relative;
       height: 100vh;
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     #main {
+      flex: 1;
       padding: 2rem;
-      overflow-y: auto;
-      height: calc(100vh - 3rem);
+      overflow-y: scroll;
       position: relative;
+      scrollbar-width: none;        /* Firefox */
+      -ms-overflow-style: none;     /* IE 10+ */
     }
 
-    .date-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 1.5rem;
-      margin-top: 2rem;
+    #main::-webkit-scrollbar {
+      display: none;                /* Chrome/Safari */
     }
 
     .nav-link {
@@ -49,25 +46,33 @@
       margin: 0;
     }
 
-    .footer-links {
+    .footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 0.5rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
       background: white;
       border-top: 1px solid #ccc;
+      padding: 0.5rem 2rem;
+      font-size: 0.8rem;
     }
 
-    .footer-links a {
+    .footer-top, .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-top {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer a {
       color: black;
       text-decoration: none;
     }
 
-    .footer-links a:hover {
+    .footer a:hover {
       text-decoration: none;
     }
 
@@ -90,22 +95,46 @@
       z-index: 0;
       pointer-events: none;
     }
+
+    .mask-reveal {
+      animation: reveal-mask 1s ease forwards;
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+
+    @keyframes reveal-mask {
+      from {
+        -webkit-mask-position: 0% 0%;
+        mask-position: 0% 0%;
+      }
+      to {
+        -webkit-mask-position: 0% 100%;
+        mask-position: 0% 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="main">
     <h1>Today's Darling (Translated)</h1>
-    <div id="content" class="fade visible"><em>Loading...</em></div>
-    <div id="original" class="fade hidden"></div>
-    <div class="date-nav">
+    <div id="content" class="fade hidden"><em>Loading...</em></div>
+    <div id="original" class="fade visible"></div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-top">
+      <a href="https://www.1101.com/home.html" target="_blank">1101.com</a>
+      <a id="toggle-original" class="toggle-original">see original post text</a>
+    </div>
+    <div class="footer-bottom">
       <a id="prev" class="nav-link" href="#">←</a>
       <span id="current-date"></span>
       <a id="next" class="nav-link" href="#">→</a>
     </div>
-  </div>
-  <div class="footer-links">
-    <a href="https://www.1101.com/home.html" target="_blank">1101.com</a>
-    <a id="toggle-original" class="toggle-original">see original post text</a>
   </div>
 
   <script>
@@ -132,7 +161,20 @@
       document.getElementById("content").innerHTML = `<pre>${trans}</pre>`;
       document.getElementById("original").innerHTML = `<pre>${orig}</pre>`;
 
-      updateView();
+      const content = document.getElementById("content");
+      const originalDiv = document.getElementById("original");
+
+      content.classList.remove("visible", "hidden");
+      originalDiv.classList.remove("visible", "hidden");
+
+      content.classList.add("fade", "visible");
+      originalDiv.classList.add("fade", "mask-reveal");
+
+      setTimeout(() => {
+        originalDiv.classList.remove("visible", "mask-reveal");
+        originalDiv.classList.add("hidden");
+        showingOriginal = false;
+      }, 1000);
 
       document.getElementById("prev").style.visibility = index < translations.length - 1 ? "visible" : "hidden";
       document.getElementById("next").style.visibility = index > 0 ? "visible" : "hidden";
