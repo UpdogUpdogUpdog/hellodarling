@@ -49,7 +49,7 @@ def translate(text):
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": "meta-llama/Llama-3-70b-chat-hf",
-            "prompt": f"Translate the following Japanese essay into natural, literary English without adding or omitting ideas. Retain paragraph breaks and tone.\n---\n{text}",
+            "prompt": f"Translate the following Japanese essay into natural, literary English without adding or omitting ideas. Retain all paragraph breaks and tone. If Japanese idioms are used, you should include them, but add a footnote with the untranslated text alongside a reasonable interpretation for an English native speaker. \n---\n{text}",
             "max_tokens": 2048,
             "temperature": 0.7,
         }
