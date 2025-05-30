@@ -1,0 +1,41 @@
+name: Generate Particle JSON
+
+on:
+  workflow_dispatch:
+  push:
+  workflow_run:
+    workflows: ["fetch_translate"]
+    types:
+      - completed
+      
+
+
+jobs:
+  generate:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run generator
+        run: python3 .github/scripts/generate_particle_json.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.json translation.json
+          git commit -m "Generate Particle JSON output" || echo "No changes"
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
