@@ -2,6 +2,7 @@ name: Generate Particle JSON
 
 on:
   workflow_dispatch:
+  push:
   workflow_run:
     workflows: ["fetch_translate"]
     types:
