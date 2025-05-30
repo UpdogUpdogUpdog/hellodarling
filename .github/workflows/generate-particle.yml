@@ -30,7 +30,7 @@ jobs:
         run: pip install requests
 
       - name: Run generator
-        run: python3 scripts/generate_particle_json.py
+        run: python3 .github/scripts/generate_particle_json.py
 
       - name: Commit and push
         run: |
