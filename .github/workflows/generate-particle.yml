@@ -9,6 +9,7 @@ on:
       - completed
       
 
+
 jobs:
   generate:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
@@ -25,8 +26,11 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Install dependencies
+        run: pip install requests
+
       - name: Run generator
-        run: python3 .github/scripts/generate_particle_json.py
+        run: python3 scripts/generate_particle_json.py
 
       - name: Commit and push
         run: |
