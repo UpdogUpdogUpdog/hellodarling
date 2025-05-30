@@ -7,6 +7,7 @@ on:
     workflows: ["fetch_translate"]
     types:
       - completed
+      
 
 jobs:
   generate:
