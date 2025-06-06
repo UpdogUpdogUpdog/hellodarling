@@ -4,6 +4,7 @@ import os
 import time
 import datetime
 import requests
+from openai import OpenAI
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -65,15 +66,14 @@ def fetch_today_post():
 
     return full_text
 
-import os
-import openai
+
 
 def translate(text):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not found in environment")
 
-    openai.api_key = api_key
+    client = OpenAI(api_key=api_key)
 
     prompt = (
         "You are translating a Japanese personal essay into natural, literary English.\n"
@@ -86,23 +86,15 @@ def translate(text):
         f"{text}"
     )
 
-    try:
-        res = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a skilled translator of literary Japanese essays."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.7,
-            max_tokens=2048,
-        )
-    except openai.error.OpenAIError as e:
-        raise RuntimeError(f"OpenAI API error: {e}")
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=4096
+    )
 
-    message = res["choices"][0]["message"]["content"].strip()
-    if not message:
-        raise RuntimeError("Empty translation response from OpenAI")
-    return message
+    return response.choices[0].message.content.strip()
+
 
 
 def main():
