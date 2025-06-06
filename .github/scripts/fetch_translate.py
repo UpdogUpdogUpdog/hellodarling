@@ -66,17 +66,19 @@ def fetch_today_post():
     return full_text
 
 def translate(text):
+    import os
+    import requests
+
     api_key = os.getenv("TOGETHER_API_KEY")
     if not api_key:
         raise RuntimeError("TOGETHER_API_KEY not found in environment")
 
     prompt = (
         "You are translating a Japanese personal essay into natural, literary English.\n"
-        "Do not translate word-for-word—your goal is to preserve the author's original voice, tone, and nuance for a native English reader.\n"
-        "Do not include boilerplate like 'Here is the translation.' Do not explain your output.\n"
-        "Preserve paragraph breaks (two line breaks = new paragraph).\n"
-        "Respect any formatting (e.g., unusual spacing, symbols like ・, etc.) where it contributes to tone.\n"
-        "If there is a phrase or idiom that doesn't translate easily, include a minimal footnote only if necessary.\n"
+        "Your job is to preserve the author's tone, voice, and nuance.\n"
+        "Do not translate word-for-word. Do not include boilerplate like 'Here is the translation.'\n"
+        "Preserve paragraph breaks (double line breaks), formatting, and symbols such as ・.\n"
+        "If something doesn’t translate well, include a footnote only if it truly adds clarity.\n"
         "---\n"
         f"{text}"
     )
@@ -85,7 +87,7 @@ def translate(text):
         "https://api.together.xyz/inference",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
-            "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "model": "openchat/gpt-4o",
             "prompt": prompt,
             "max_tokens": 2048,
             "temperature": 0.7,
@@ -94,18 +96,13 @@ def translate(text):
 
     res.raise_for_status()
     data = res.json()
-
-    # DEBUG print of full response
     print("TOGETHER API RESPONSE:\n", data)
 
-    # Defensive parse to handle multiple response formats
     output = data.get("output")
     if isinstance(output, str) and output.strip():
         return output.strip()
     elif isinstance(output, dict):
         return output.get("choices", [{}])[0].get("text", "").strip()
-    elif "choices" in data:
-        return data["choices"][0].get("text", "").strip()
     else:
         raise RuntimeError("Empty or malformed API response: " + str(data))
 
