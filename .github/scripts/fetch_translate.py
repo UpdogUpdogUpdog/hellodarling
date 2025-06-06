@@ -23,21 +23,22 @@ def fetch_today_post():
     driver.get("https://www.1101.com/")
     time.sleep(2)
 
-    try:
-        more_button = driver.find_element(By.PARTIAL_LINK_TEXT, "つづきを読む")
-        more_button.click()
-        time.sleep(1)
-    except:
-        pass
-
     soup = BeautifulSoup(driver.page_source, "html.parser")
     driver.quit()
 
-    darling_div = soup.select_one("div.darling__txt")
-    if not darling_div:
-        raise Exception("Could not find today's darling post.")
+    title_el = soup.select_one("div.home-first-darling-title h2")
+    author_el = soup.select_one("div.home-first-darling-title h3")
+    body_el = soup.select_one("div.home-first-darling-text")
 
-    return darling_div.get_text("\n", strip=True).replace("\u3000", " ")
+    if not (title_el and author_el and body_el):
+        raise Exception("Could not find all required elements (title, author, body).")
+
+    title = title_el.get_text(strip=True)
+    author = author_el.get_text(strip=True)
+    body = body_el.get_text("\n", strip=True).replace("\u3000", " ")
+
+    full_text = f"{title}\n{author}\n\n{body}"
+    return full_text
 
 def translate(text):
     api_key = os.getenv("TOGETHER_API_KEY")
