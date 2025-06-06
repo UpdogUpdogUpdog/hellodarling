@@ -94,13 +94,18 @@ def translate(text):
 
     res.raise_for_status()
     data = res.json()
+
+    # DEBUG print of full response
     print("TOGETHER API RESPONSE:\n", data)
 
+    # Defensive parse to handle multiple response formats
     output = data.get("output")
     if isinstance(output, str) and output.strip():
         return output.strip()
     elif isinstance(output, dict):
         return output.get("choices", [{}])[0].get("text", "").strip()
+    elif "choices" in data:
+        return data["choices"][0].get("text", "").strip()
     else:
         raise RuntimeError("Empty or malformed API response: " + str(data))
 
