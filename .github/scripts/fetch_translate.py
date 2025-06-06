@@ -84,29 +84,27 @@ def translate(text):
     )
 
     res = requests.post(
-        "https://api.together.xyz/inference",
-        headers={"Authorization": f"Bearer {api_key}"},
+        "https://api.together.xyz/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
         json={
             "model": "openchat/gpt-4o",
-            "prompt": prompt,
-            "max_tokens": 2048,
+            "messages": [
+                {"role": "system", "content": "You are a sensitive, thoughtful translator of Japanese writing into beautiful, natural English."},
+                {"role": "user", "content": prompt},
+            ],
             "temperature": 0.7,
-        }
+            "max_tokens": 2048,
+        },
     )
 
     res.raise_for_status()
     data = res.json()
     print("TOGETHER API RESPONSE:\n", data)
 
-    output = data.get("output")
-    if isinstance(output, str) and output.strip():
-        return output.strip()
-    elif isinstance(output, dict):
-        return output.get("choices", [{}])[0].get("text", "").strip()
-    else:
-        raise RuntimeError("Empty or malformed API response: " + str(data))
-
-
+    return data["choices"][0]["message"]["content"].strip()
 
 
 def main():
