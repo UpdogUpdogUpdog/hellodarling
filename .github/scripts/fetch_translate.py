@@ -40,10 +40,10 @@ def fetch_today_post():
     full_text = f"{title}\n{author}\n\n{body}"
     return full_text
 
-    def translate(text):
-        api_key = os.getenv("TOGETHER_API_KEY")
-        if not api_key:
-            raise RuntimeError("TOGETHER_API_KEY not found in environment")
+def translate(text):
+    api_key = os.getenv("TOGETHER_API_KEY")
+    if not api_key:
+        raise RuntimeError("TOGETHER_API_KEY not found in environment")
 
     res = requests.post(
         "https://api.together.xyz/inference",
