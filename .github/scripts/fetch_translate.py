@@ -40,10 +40,10 @@ def fetch_today_post():
     full_text = f"{title}\n{author}\n\n{body}"
     return full_text
 
-def translate(text):
-    api_key = os.getenv("TOGETHER_API_KEY")
-    if not api_key:
-        raise RuntimeError("TOGETHER_API_KEY not found in environment")
+    def translate(text):
+        api_key = os.getenv("TOGETHER_API_KEY")
+        if not api_key:
+            raise RuntimeError("TOGETHER_API_KEY not found in environment")
 
     res = requests.post(
         "https://api.together.xyz/inference",
@@ -55,13 +55,23 @@ def translate(text):
             "temperature": 0.7,
         }
     )
+
     res.raise_for_status()
     data = res.json()
 
-    try:
-        return data["output"]["choices"][0]["text"].strip()
-    except (KeyError, IndexError) as e:
-        raise RuntimeError("Unexpected response format: " + str(data)) from e
+    # DEBUG print of full response
+    print("TOGETHER API RESPONSE:\n", data)
+
+    # Defensive parse
+    output = data.get("output")
+    if isinstance(output, str) and output.strip():
+        return output.strip()
+    elif isinstance(output, dict):
+        # Depending on model, the format may change
+        return output.get("choices", [{}])[0].get("text", "").strip()
+    else:
+        raise RuntimeError("Empty or malformed API response: " + str(data))
+
 
 
 def main():
