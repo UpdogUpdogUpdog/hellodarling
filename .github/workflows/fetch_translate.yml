@@ -23,13 +23,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install beautifulsoup4 selenium requests
+          pip install beautifulsoup4 selenium requests openai
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-chromedriver
 
       - name: Scrape and translate
         env:
-          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python .github/scripts/fetch_translate.py
 

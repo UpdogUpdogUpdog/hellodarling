@@ -4,6 +4,7 @@ import os
 import time
 import datetime
 import requests
+from openai import OpenAI
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -35,33 +36,65 @@ def fetch_today_post():
 
     title = title_el.get_text(strip=True)
     author = author_el.get_text(strip=True)
-    body = body_el.get_text("\n", strip=True).replace("\u3000", " ")
 
-    full_text = f"{title}\n{author}\n\n{body}"
+    raw_lines = []
+    paragraph_lines = []
+
+    for child in body_el.children:
+        if getattr(child, "name", None) == "p":
+            for elem in child.contents:
+                if isinstance(elem, str):
+                    paragraph_lines.append(elem.strip())
+                elif elem.name == "br":
+                    # default <br>
+                    paragraph_lines.append("\n")
+                elif elem.name == "br" and "br" in elem.get("class", []):
+                    # paragraph break
+                    raw_lines.append("".join(paragraph_lines).replace("\u3000", "　").strip())
+                    raw_lines.append("")  # empty line for paragraph break
+                    paragraph_lines = []
+                elif elem.name == "span" and "pc_space" in elem.get("class", []):
+                    paragraph_lines.append("　")  # manually add ideographic space
+
+            # After last line if no <br class="br"> followed
+            if paragraph_lines:
+                raw_lines.append("".join(paragraph_lines).replace("\u3000", "　").strip())
+                paragraph_lines = []
+
+    body_text = "\n".join(raw_lines).strip()
+    full_text = f"{title}\n{author}\n\n{body_text}"
+
     return full_text
 
+
+
 def translate(text):
-    api_key = os.getenv("TOGETHER_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError("TOGETHER_API_KEY not found in environment")
+        raise RuntimeError("OPENAI_API_KEY not found in environment")
 
-    res = requests.post(
-        "https://api.together.xyz/inference",
-        headers={"Authorization": f"Bearer {api_key}"},
-        json={
-            "model": "meta-llama/Llama-3-70b-chat-hf",
-            "prompt": f"Translate the following Japanese essay into natural, literary English without adding or omitting ideas. Retain all paragraph breaks and tone. If Japanese idioms are used, you should include them, but add a footnote with the untranslated text alongside a reasonable interpretation for an English native speaker. \n---\n{text}",
-            "max_tokens": 2048,
-            "temperature": 0.7,
-        }
+    client = OpenAI(api_key=api_key)
+
+    prompt = (
+        "You are translating a Japanese personal essay into natural, literary English.\n"
+        "Do not translate word-for-word—your goal is to preserve the author's original voice, tone, and nuance for a native English reader.\n"
+        "Do not include boilerplate like 'Here is the translation.' Do not explain your output.\n"
+        "Preserve paragraph breaks (two line breaks = new paragraph).\n"
+        "Respect any formatting (e.g., unusual spacing, symbols like ・, etc.) where it contributes to tone.\n"
+        "If there is a phrase or idiom that doesn't translate easily, include a minimal footnote only if necessary.\n"
+        "---\n"
+        f"{text}"
     )
-    res.raise_for_status()
-    data = res.json()
 
-    try:
-        return data["output"]["choices"][0]["text"].strip()
-    except (KeyError, IndexError) as e:
-        raise RuntimeError("Unexpected response format: " + str(data)) from e
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=4096
+    )
+
+    return response.choices[0].message.content.strip()
+
 
 
 def main():
