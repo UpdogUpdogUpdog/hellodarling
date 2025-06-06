@@ -70,12 +70,23 @@ def translate(text):
     if not api_key:
         raise RuntimeError("TOGETHER_API_KEY not found in environment")
 
+    prompt = (
+        "You are translating a Japanese personal essay into natural, literary English.\n"
+        "Do not translate word-for-word—your goal is to preserve the author's original voice, tone, and nuance for a native English reader.\n"
+        "Do not include boilerplate like 'Here is the translation.' Do not explain your output.\n"
+        "Preserve paragraph breaks (two line breaks = new paragraph).\n"
+        "Respect any formatting (e.g., unusual spacing, symbols like ・, etc.) where it contributes to tone.\n"
+        "If there is a phrase or idiom that doesn't translate easily, include a minimal footnote only if necessary.\n"
+        "---\n"
+        f"{text}"
+    )
+
     res = requests.post(
         "https://api.together.xyz/inference",
         headers={"Authorization": f"Bearer {api_key}"},
         json={
-            "model": "meta-llama/Llama-3-70b-chat-hf",
-            "prompt": f"Translate the following Japanese essay into natural, literary English. Do not merge lines that are visually separated by paragraph breaks, but do not treat single newlines as paragraph breaks themselves. Paragraphs are separated by two line breaks (\\n\\n). Retain tone and formatting. If there are idioms or cultural anomalies that don't translate well without losing meaning, include footnotes to help clarify them, but they are not always going to be present or necessary.\n---\n{text}",
+            "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "prompt": prompt,
             "max_tokens": 2048,
             "temperature": 0.7,
         }
@@ -83,19 +94,16 @@ def translate(text):
 
     res.raise_for_status()
     data = res.json()
-
-    # DEBUG print of full response
     print("TOGETHER API RESPONSE:\n", data)
 
-    # Defensive parse
     output = data.get("output")
     if isinstance(output, str) and output.strip():
         return output.strip()
     elif isinstance(output, dict):
-        # Depending on model, the format may change
         return output.get("choices", [{}])[0].get("text", "").strip()
     else:
         raise RuntimeError("Empty or malformed API response: " + str(data))
+
 
 
 
