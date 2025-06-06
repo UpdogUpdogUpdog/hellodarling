@@ -35,10 +35,27 @@ def fetch_today_post():
 
     title = title_el.get_text(strip=True)
     author = author_el.get_text(strip=True)
-    body = body_el.get_text("\n", strip=True).replace("\u3000", " ")
+
+    # Preserve paragraphs and visual formatting
+    paragraphs = []
+    for p_tag in body_el.find_all("p"):
+        lines = []
+        for elem in p_tag.contents:
+            if isinstance(elem, str):
+                lines.append(elem)
+            elif elem.name == "br":
+                lines.append("\n")
+            elif elem.name == "span":
+                lines.append(elem.get_text())
+        para = "".join(lines).strip()
+        if para:
+            paragraphs.append(para)
+
+    body = "\n\n".join(paragraphs)
 
     full_text = f"{title}\n{author}\n\n{body}"
     return full_text
+
 
 def translate(text):
     api_key = os.getenv("TOGETHER_API_KEY")
@@ -50,7 +67,7 @@ def translate(text):
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "model": "meta-llama/Llama-3-70b-chat-hf",
-            "prompt": f"Translate the following Japanese essay into natural, literary English without adding or omitting ideas. Retain all paragraph breaks and tone. If Japanese idioms are used, you should include them, but add a footnote with the untranslated text alongside a reasonable interpretation for an English native speaker. \n---\n{text}",
+            "prompt": f"Translate the following Japanese essay into natural, literary English. Do not merge lines that are visually separated by paragraph breaks, but do not treat single newlines as paragraph breaks themselves. Paragraphs are separated by two line breaks (\\n\\n). Retain tone and formatting. If there are idioms or cultural anomalies that don't translate well without losing meaning, include footnotes to help clarify them, but they are not always going to be present or necessary.\n---\n{text}",
             "max_tokens": 2048,
             "temperature": 0.7,
         }
