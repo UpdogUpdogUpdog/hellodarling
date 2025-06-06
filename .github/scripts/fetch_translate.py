@@ -65,46 +65,44 @@ def fetch_today_post():
 
     return full_text
 
-def translate(text):
-    import os
-    import requests
+import os
+import openai
 
-    api_key = os.getenv("TOGETHER_API_KEY")
+def translate(text):
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError("TOGETHER_API_KEY not found in environment")
+        raise RuntimeError("OPENAI_API_KEY not found in environment")
+
+    openai.api_key = api_key
 
     prompt = (
         "You are translating a Japanese personal essay into natural, literary English.\n"
-        "Your job is to preserve the author's tone, voice, and nuance.\n"
-        "Do not translate word-for-word. Do not include boilerplate like 'Here is the translation.'\n"
-        "Preserve paragraph breaks (double line breaks), formatting, and symbols such as ・.\n"
-        "If something doesn’t translate well, include a footnote only if it truly adds clarity.\n"
+        "Do not translate word-for-word—your goal is to preserve the author's original voice, tone, and nuance for a native English reader.\n"
+        "Do not include boilerplate like 'Here is the translation.' Do not explain your output.\n"
+        "Preserve paragraph breaks (two line breaks = new paragraph).\n"
+        "Respect any formatting (e.g., unusual spacing, symbols like ・, etc.) where it contributes to tone.\n"
+        "If there is a phrase or idiom that doesn't translate easily, include a minimal footnote only if necessary.\n"
         "---\n"
         f"{text}"
     )
 
-    res = requests.post(
-        "https://api.together.xyz/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": "openchat/gpt-4o",
-            "messages": [
-                {"role": "system", "content": "You are a sensitive, thoughtful translator of Japanese writing into beautiful, natural English."},
+    try:
+        res = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a skilled translator of literary Japanese essays."},
                 {"role": "user", "content": prompt},
             ],
-            "temperature": 0.7,
-            "max_tokens": 2048,
-        },
-    )
+            temperature=0.7,
+            max_tokens=2048,
+        )
+    except openai.error.OpenAIError as e:
+        raise RuntimeError(f"OpenAI API error: {e}")
 
-    res.raise_for_status()
-    data = res.json()
-    print("TOGETHER API RESPONSE:\n", data)
-
-    return data["choices"][0]["message"]["content"].strip()
+    message = res["choices"][0]["message"]["content"].strip()
+    if not message:
+        raise RuntimeError("Empty translation response from OpenAI")
+    return message
 
 
 def main():
