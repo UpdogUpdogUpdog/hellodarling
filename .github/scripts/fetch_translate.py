@@ -36,26 +36,34 @@ def fetch_today_post():
     title = title_el.get_text(strip=True)
     author = author_el.get_text(strip=True)
 
-    # Preserve paragraphs and visual formatting
-    paragraphs = []
-    for p_tag in body_el.find_all("p"):
-        lines = []
-        for elem in p_tag.contents:
-            if isinstance(elem, str):
-                lines.append(elem)
-            elif elem.name == "br":
-                lines.append("\n")
-            elif elem.name == "span":
-                lines.append(elem.get_text())
-        para = "".join(lines).strip()
-        if para:
-            paragraphs.append(para)
+    raw_lines = []
+    paragraph_lines = []
 
-    body = "\n\n".join(paragraphs)
+    for child in body_el.children:
+        if getattr(child, "name", None) == "p":
+            for elem in child.contents:
+                if isinstance(elem, str):
+                    paragraph_lines.append(elem.strip())
+                elif elem.name == "br":
+                    # default <br>
+                    paragraph_lines.append("\n")
+                elif elem.name == "br" and "br" in elem.get("class", []):
+                    # paragraph break
+                    raw_lines.append("".join(paragraph_lines).replace("\u3000", "　").strip())
+                    raw_lines.append("")  # empty line for paragraph break
+                    paragraph_lines = []
+                elif elem.name == "span" and "pc_space" in elem.get("class", []):
+                    paragraph_lines.append("　")  # manually add ideographic space
 
-    full_text = f"{title}\n{author}\n\n{body}"
+            # After last line if no <br class="br"> followed
+            if paragraph_lines:
+                raw_lines.append("".join(paragraph_lines).replace("\u3000", "　").strip())
+                paragraph_lines = []
+
+    body_text = "\n".join(raw_lines).strip()
+    full_text = f"{title}\n{author}\n\n{body_text}"
+
     return full_text
-
 
 def translate(text):
     api_key = os.getenv("TOGETHER_API_KEY")
