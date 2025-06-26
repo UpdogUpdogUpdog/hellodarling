@@ -31,10 +31,19 @@ def fetch_today_post():
     author_el = soup.select_one("div.home-first-darling-title h3")
     body_el = soup.select_one("div.home-first-darling-text")
 
-    if not (title_el and author_el and body_el):
+    if title_el and title_el.get_text(strip=True):
+        title = title_el.get_text(strip=True)
+    else:
+        darling_div = soup.select_one("div.darling")
+        if darling_div and darling_div.has_attr("x-data"):
+            import re
+            match = re.search(r"darlingTitle:\s*`(.*?)`", darling_div["x-data"])
+            if match:
+                title = match.group(1)
+
+    if not (title and author_el and body_el):
         raise Exception("Could not find all required elements (title, author, body).")
 
-    title = title_el.get_text(strip=True)
     author = author_el.get_text(strip=True)
 
     raw_lines = []
@@ -46,17 +55,14 @@ def fetch_today_post():
                 if isinstance(elem, str):
                     paragraph_lines.append(elem.strip())
                 elif elem.name == "br":
-                    # default <br>
                     paragraph_lines.append("\n")
                 elif elem.name == "br" and "br" in elem.get("class", []):
-                    # paragraph break
                     raw_lines.append("".join(paragraph_lines).replace("\u3000", "　").strip())
-                    raw_lines.append("")  # empty line for paragraph break
+                    raw_lines.append("")  # paragraph break
                     paragraph_lines = []
                 elif elem.name == "span" and "pc_space" in elem.get("class", []):
-                    paragraph_lines.append("　")  # manually add ideographic space
+                    paragraph_lines.append("　")  # ideographic space
 
-            # After last line if no <br class="br"> followed
             if paragraph_lines:
                 raw_lines.append("".join(paragraph_lines).replace("\u3000", "　").strip())
                 paragraph_lines = []
