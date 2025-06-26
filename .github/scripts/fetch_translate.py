@@ -27,10 +27,10 @@ def fetch_today_post():
     soup = BeautifulSoup(driver.page_source, "html.parser")
     driver.quit()
 
-    title_el = soup.select_one("div.home-first-darling-title h2")
-    author_el = soup.select_one("div.home-first-darling-title h3")
-    body_el = soup.select_one("div.home-first-darling-text")
-
+    title_el = soup.select_one("div.darling-title h2")
+    author_el = soup.select_one("div.darling-title h3")
+    body_el = soup.select_one("div.darling-text")
+    
     if title_el and title_el.get_text(strip=True):
         title = title_el.get_text(strip=True)
     else:
